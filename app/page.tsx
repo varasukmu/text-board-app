@@ -1,8 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Copy, Trash2, Edit3, Check, Save, X } from 'lucide-react'
+import { Copy, Trash2, Edit3, Check, Save, X, AlertCircle } from 'lucide-react' // เพิ่ม AlertCircle เข้ามา
 
-// 1. กำหนดรูปแบบของข้อมูล
 type Block = {
   id: number
   title: string
@@ -11,20 +10,20 @@ type Block = {
 
 export default function Home() {
   const [blocks, setBlocks] = useState<Block[]>([])
-  const [isLoaded, setIsLoaded] = useState(false) // สำคัญ: ป้องกันหน้ากระตุกตอนโหลดครั้งแรก
-
-  // State สำหรับแก้ไข
+  const [isLoaded, setIsLoaded] = useState(false)
+  
+  // State สำหรับเปิด/ปิดป้ายเตือน
+  const [showWarning, setShowWarning] = useState(true)
+  
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editContent, setEditContent] = useState('')
-
-  // State สำหรับสร้างใหม่
+  
   const [newTitle, setNewTitle] = useState('')
   const [newContent, setNewContent] = useState('')
-
+  
   const [copiedId, setCopiedId] = useState<number | null>(null)
 
-  // 2. ดึงข้อมูลจาก Local Storage ตอนเปิดเว็บ
   useEffect(() => {
     const savedBlocks = localStorage.getItem('my-text-blocks')
     if (savedBlocks) {
@@ -33,19 +32,17 @@ export default function Home() {
     setIsLoaded(true)
   }, [])
 
-  // ฟังก์ชันตัวช่วย: อัปเดตข้อมูลบนหน้าจอ + เซฟลง Local Storage พร้อมกัน
   const updateBlocksAndSave = (newBlocks: Block[]) => {
     setBlocks(newBlocks)
     localStorage.setItem('my-text-blocks', JSON.stringify(newBlocks))
   }
 
-  // 3. ฟังก์ชันสร้าง Block ใหม่ (ไม่ต้องใช้ fetch แล้ว)
   function addBlock(e: React.FormEvent) {
     e.preventDefault()
     if (!newContent.trim()) return
 
     const newBlock: Block = {
-      id: Date.now(), // ใช้เวลาปัจจุบันสร้าง ID ไม่ซ้ำกัน
+      id: Date.now(),
       title: newTitle.trim(),
       content: newContent
     }
@@ -55,16 +52,14 @@ export default function Home() {
     setNewContent('')
   }
 
-  // 4. ฟังก์ชันบันทึกการแก้ไข (ไม่ต้องใช้ fetch แล้ว)
   function save(id: number) {
-    const updatedBlocks = blocks.map(b =>
+    const updatedBlocks = blocks.map(b => 
       b.id === id ? { ...b, title: editTitle.trim(), content: editContent } : b
     )
     updateBlocksAndSave(updatedBlocks)
     setEditingId(null)
   }
 
-  // 5. ฟังก์ชันลบ Block (ไม่ต้องใช้ fetch แล้ว)
   function deleteBlock(id: number) {
     if (confirm('Are you sure you want to delete this block?')) {
       const filteredBlocks = blocks.filter(b => b.id !== id)
@@ -78,14 +73,30 @@ export default function Home() {
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  // ป้องกัน Hydration Error (หน้าขาว) ตอน Vercel รันครั้งแรก
   if (!isLoaded) return null
 
   return (
     <div className="max-w-3xl mx-auto py-12">
       <div className="bg-[#f0f4f9] p-8 rounded-3xl shadow-sm border border-slate-200">
+        
+        {showWarning && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 flex gap-3 items-start relative shadow-sm">
+            <AlertCircle className="text-amber-500 flex-shrink-0 mt-0.5" size={20} />
+            <div className="text-amber-800 text-sm leading-relaxed pr-6">
+              <strong>Important Note:</strong> Your text blocks are saved locally in this browser. 
+              Do not clear your browser's <strong>site data/cookies</strong> or use <strong>Incognito mode</strong>, 
+              otherwise your data will be permanently lost!
+            </div>
+            <button 
+              onClick={() => setShowWarning(false)}
+              className="absolute top-3 right-3 text-amber-400 hover:text-amber-600 p-1.5 rounded-lg hover:bg-amber-100 transition-colors"
+              title="Dismiss warning"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
-        {/* Form สร้าง Block ใหม่ */}
         <form onSubmit={addBlock} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm mb-8 flex flex-col gap-3">
           <input
             type="text"
@@ -116,7 +127,6 @@ export default function Home() {
           You have <span className="text-blue-500 font-bold">{blocks.length}</span> block(s)
         </h2>
 
-        {/* List of Blocks */}
         <div className="space-y-3">
           {blocks.map((b) => (
             <div key={b.id} className="flex items-start sm:items-center justify-between bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-100 gap-4 group">
