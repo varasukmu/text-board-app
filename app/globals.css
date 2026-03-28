@@ -1,11 +1,10 @@
 @import "tailwindcss";
+@variant dark (&:is(.dark *));
 
-/* smooth font */
 body {
   font-family: system-ui, sans-serif;
 }
 
-/* scrollbar ให้เข้ากับธีมสว่าง */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -15,4 +14,11 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+/* Scrollbar สีเข้มสำหรับ Dark Mode */
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
